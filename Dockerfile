@@ -15,9 +15,16 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Add Greenbone repository
+# Create keyring directory explicitly
+RUN mkdir -p /usr/share/keyrings
+
+# Download Greenbone signing key (no pipe)
 RUN curl -fsSL https://packages.greenbone.net/GBCommunitySigningKey.asc \
-    | gpg --dearmor -o /usr/share/keyrings/greenbone.gpg
+    -o /tmp/greenbone.asc
+
+# Convert key to gpg format
+RUN gpg --dearmor /tmp/greenbone.asc && \
+    mv /tmp/greenbone.asc.gpg /usr/share/keyrings/greenbone.gpg
 
 RUN echo "deb [signed-by=/usr/share/keyrings/greenbone.gpg] \
     https://packages.greenbone.net/community/debian stable main" \
@@ -47,3 +54,4 @@ CMD service redis-server start && \
     service postgresql start && \
     gvm-start && \
     tail -f /var/log/gvm/gvmd.log
+
